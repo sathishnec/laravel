@@ -12,7 +12,7 @@ return array(
 	| application. If disabled, a simple generic error page is shown.
 	|
 	*/
-
+	'cipher' => MCRYPT_RIJNDAEL_256,
 	'debug' => true,
 
 	/*

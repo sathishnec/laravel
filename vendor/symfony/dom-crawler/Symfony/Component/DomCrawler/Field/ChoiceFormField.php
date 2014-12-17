@@ -42,7 +42,7 @@ class ChoiceFormField extends FormField
     /**
      * Returns true if the field should be included in the submitted values.
      *
-     * @return bool    true if the field should be included in the submitted values, false otherwise
+     * @return bool true if the field should be included in the submitted values, false otherwise
      */
     public function hasValue()
     {
@@ -161,11 +161,11 @@ class ChoiceFormField extends FormField
      *
      * This method should only be used internally.
      *
-     * @param \DOMNode $node A \DOMNode
+     * @param \DOMElement $node
      *
      * @throws \LogicException When choice provided is not multiple nor radio
      */
-    public function addChoice(\DOMNode $node)
+    public function addChoice(\DOMElement $node)
     {
         if (!$this->multiple && 'radio' !== $this->type) {
             throw new \LogicException(sprintf('Unable to add a choice for "%s" as it is not multiple or is not a radio button.', $this->name));
@@ -192,7 +192,7 @@ class ChoiceFormField extends FormField
     /**
      * Returns true if the field accepts multiple values.
      *
-     * @return bool    true if the field accepts multiple values, false otherwise
+     * @return bool true if the field accepts multiple values, false otherwise
      */
     public function isMultiple()
     {
@@ -259,15 +259,15 @@ class ChoiceFormField extends FormField
     /**
      * Returns option value with associated disabled flag
      *
-     * @param \DOMNode $node
+     * @param \DOMElement $node
      *
      * @return array
      */
-    private function buildOptionValue($node)
+    private function buildOptionValue(\DOMElement $node)
     {
         $option = array();
 
-        $defaultValue = (isset($node->nodeValue) && !empty($node->nodeValue)) ? $node->nodeValue : '1';
+        $defaultValue = (isset($node->nodeValue) && !empty($node->nodeValue)) ? $node->nodeValue : 'on';
         $option['value'] = $node->hasAttribute('value') ? $node->getAttribute('value') : $defaultValue;
         $option['disabled'] = $node->hasAttribute('disabled');
 

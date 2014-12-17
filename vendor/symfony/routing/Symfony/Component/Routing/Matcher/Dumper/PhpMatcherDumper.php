@@ -41,7 +41,7 @@ class PhpMatcherDumper extends MatcherDumper
     public function dump(array $options = array())
     {
         $options = array_replace(array(
-            'class'      => 'ProjectUrlMatcher',
+            'class' => 'ProjectUrlMatcher',
             'base_class' => 'Symfony\\Component\\Routing\\Matcher\\UrlMatcher',
         ), $options);
 
@@ -81,7 +81,7 @@ EOF;
     /**
      * Generates the code for the match method implementing UrlMatcherInterface.
      *
-     * @param bool    $supportsRedirections Whether redirections are supported by the base class
+     * @param bool $supportsRedirections Whether redirections are supported by the base class
      *
      * @return string Match method as PHP code
      */
@@ -288,14 +288,15 @@ EOF;
 EOF;
         }
 
-        if ($scheme = $route->getRequirement('_scheme')) {
+        if ($schemes = $route->getSchemes()) {
             if (!$supportsRedirections) {
-                throw new \LogicException('The "_scheme" requirement is only supported for URL matchers that implement RedirectableUrlMatcherInterface.');
+                throw new \LogicException('The "schemes" requirement is only supported for URL matchers that implement RedirectableUrlMatcherInterface.');
             }
-
+            $schemes = str_replace("\n", '', var_export(array_flip($schemes), true));
             $code .= <<<EOF
-            if (\$this->context->getScheme() !== '$scheme') {
-                return \$this->redirect(\$pathinfo, '$name', '$scheme');
+            \$requiredSchemes = $schemes;
+            if (!isset(\$requiredSchemes[\$this->context->getScheme()])) {
+                return \$this->redirect(\$pathinfo, '$name', key(\$requiredSchemes));
             }
 
 
@@ -313,9 +314,11 @@ EOF;
             }
             $vars[] = "array('_route' => '$name')";
 
-            $code .= sprintf("            return \$this->mergeDefaults(array_replace(%s), %s);\n"
-                , implode(', ', $vars), str_replace("\n", '', var_export($route->getDefaults(), true)));
-
+            $code .= sprintf(
+                "            return \$this->mergeDefaults(array_replace(%s), %s);\n",
+                implode(', ', $vars),
+                str_replace("\n", '', var_export($route->getDefaults(), true))
+            );
         } elseif ($route->getDefaults()) {
             $code .= sprintf("            return %s;\n", str_replace("\n", '', var_export(array_replace($route->getDefaults(), array('_route' => $name)), true)));
         } else {

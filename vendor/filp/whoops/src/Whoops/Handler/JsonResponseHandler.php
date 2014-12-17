@@ -5,8 +5,8 @@
  */
 
 namespace Whoops\Handler;
-use Whoops\Handler\Handler;
-use Whoops\Exception\Frame;
+
+use Whoops\Exception\Formatter;
 
 /**
  * Catches an exception and converts it to a JSON
@@ -26,16 +26,17 @@ class JsonResponseHandler extends Handler
     private $onlyForAjaxRequests = false;
 
     /**
-     * @param  bool|null $returnFrames
-     * @return null|bool
+     * @param  bool|null  $returnFrames
+     * @return bool|$this
      */
     public function addTraceToOutput($returnFrames = null)
     {
-        if(func_num_args() == 0) {
+        if (func_num_args() == 0) {
             return $this->returnFrames;
         }
 
         $this->returnFrames = (bool) $returnFrames;
+        return $this;
     }
 
     /**
@@ -44,7 +45,7 @@ class JsonResponseHandler extends Handler
      */
     public function onlyForAjaxRequests($onlyForAjaxRequests = null)
     {
-        if(func_num_args() == 0) {
+        if (func_num_args() == 0) {
             return $this->onlyForAjaxRequests;
         }
 
@@ -60,8 +61,7 @@ class JsonResponseHandler extends Handler
     {
         return (
             !empty($_SERVER['HTTP_X_REQUESTED_WITH'])
-            && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest')
-        ;
+            && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
     }
 
     /**
@@ -69,38 +69,19 @@ class JsonResponseHandler extends Handler
      */
     public function handle()
     {
-        if($this->onlyForAjaxRequests() && !$this->isAjaxRequest()) {
+        if ($this->onlyForAjaxRequests() && !$this->isAjaxRequest()) {
             return Handler::DONE;
         }
 
-        $exception = $this->getException();
-
         $response = array(
-            'error' => array(
-                'type'    => get_class($exception),
-                'message' => $exception->getMessage(),
-                'file'    => $exception->getFile(),
-                'line'    => $exception->getLine()
-            )
+            'error' => Formatter::formatExceptionAsDataArray(
+                $this->getInspector(),
+                $this->addTraceToOutput()
+            ),
         );
 
-        if($this->addTraceToOutput()) {
-            $inspector = $this->getInspector();
-            $frames    = $inspector->getFrames();
-            $frameData = array();
-
-            foreach($frames as $frame) {
-                /** @var Frame $frame */
-                $frameData[] = array(
-                    'file'     => $frame->getFile(),
-                    'line'     => $frame->getLine(),
-                    'function' => $frame->getFunction(),
-                    'class'    => $frame->getClass(),
-                    'args'     => $frame->getArgs()
-                );
-            }
-
-            $response['error']['trace'] = $frameData;
+        if (\Whoops\Util\Misc::canSendHeaders()) {
+            header('Content-Type: application/json');
         }
 
         echo json_encode($response);

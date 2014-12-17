@@ -86,6 +86,25 @@ class HttpKernel implements HttpKernelInterface, TerminableInterface
     }
 
     /**
+     * @throws \LogicException If the request stack is empty
+     *
+     * @internal
+     */
+    public function terminateWithException(\Exception $exception)
+    {
+        if (!$request = $this->requestStack->getMasterRequest()) {
+            throw new \LogicException('Request stack is empty', 0, $exception);
+        }
+
+        $response = $this->handleException($exception, $request, self::MASTER_REQUEST);
+
+        $response->sendHeaders();
+        $response->sendContent();
+
+        $this->terminate($request, $response);
+    }
+
+    /**
      * Handles a request to convert it to a response.
      *
      * Exceptions are not caught.
@@ -95,7 +114,7 @@ class HttpKernel implements HttpKernelInterface, TerminableInterface
      *
      * @return Response A Response instance
      *
-     * @throws \LogicException If one of the listener does not behave as expected
+     * @throws \LogicException       If one of the listener does not behave as expected
      * @throws NotFoundHttpException When controller cannot be found
      */
     private function handleRaw(Request $request, $type = self::MASTER_REQUEST)

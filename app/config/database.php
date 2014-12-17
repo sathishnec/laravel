@@ -56,7 +56,7 @@ return array(
 			'driver'    => 'mysql',
 			'host'      => 'localhost',
 			'database'  => 'holiday_planner',
-			'username'  => 'root',
+			'username'  => 'admin',
 			'password'  => 'changeMe',
 			'charset'   => 'utf8',
 			'collation' => 'utf8_unicode_ci',
